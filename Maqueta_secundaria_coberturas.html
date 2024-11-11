@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa de Cobertura 5G en Chile</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>Mapa de Cobertura 5G en Chile</h1>
+        <nav>
+            <ul>
+                <li><a href="https://desafio17slucclarochile.github.io/plataformasig/">Mapa de Cobertura</a></li>
+                <li><a href="https://desafio17slucclarochile.github.io/plataformasig/">Análisis Demográfico</a></li>
+                <li><a href="https://desafio17slucclarochile.github.io/plataformasig/">Planificación de Radioenlaces</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section>
+            <h2>Mapa de Cobertura 5G</h2>
+            <p>Visualiza la cobertura actual de redes 5G en Chile.</p>
+        </section>
+        <title>Mapa de Cobertura 4G y 5G en Tarapacá</title>
+        <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+        <style>
+            #map {
+                height: 600px;
+                width: 100%;
+            }
+            .popup-custom {
+                max-height: 200px;
+                overflow-y: auto;
+                width: 292px;
+                padding: 8px;
+                box-sizing: border-box;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="map"></div>
+    
+        <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+        <script>
+            var map = L.map('map').setView([-20.0, -69.5], 6);
+    
+            var osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+        
+            var googleSat = L.tileLayer('http://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+                maxZoom: 20,
+                subdomains: ['mt0', 'mt1', 'mt2', 'mt3']
+            });
+    
+            // Grupos para cada operador y tecnología
+            var claro5GGroup = L.layerGroup(), entel5GGroup = L.layerGroup(), movistar5GGroup = L.layerGroup(), wom5GGroup = L.layerGroup(), womAWSGroup = L.layerGroup();
+            var claro4GGroup = L.layerGroup(), entel4GGroup = L.layerGroup(), movistar4GGroup = L.layerGroup(), wom4GGroup = L.layerGroup();
+    
+            var styleOptions = { fillColor: '#90EE90', weight: 0, opacity: 0.8, fillOpacity: 0.5 };
+    
+            function loadGeoJson(url, layerGroup) {
+                fetch(url)
+                    .then(response => response.json())
+                    .then(data => {
+                        L.geoJSON(data, {
+                            style: styleOptions,
+                            onEachFeature: function(feature, layer) {
+                                var popupContent = '<div class="popup-custom"><h3>Detalles de Cobertura</h3>';
+                                if (feature.properties) {
+                                    let lines = 0;
+                                    for (var key in feature.properties) {
+                                        if (lines < 22) {
+                                            popupContent += '<strong>' + key + ':</strong> ' + feature.properties[key] + '<br>';
+                                            lines++;
+                                        }
+                                    }
+                                }
+                                popupContent += '</div>';
+                                layer.bindPopup(popupContent);
+                            }
+                        }).addTo(layerGroup);
+                    })
+                    .catch(error => console.error('Error al cargar GeoJSON:', error));
+            }
+    
+            function loadTowerGeoJson(url, layerGroup, color) {
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                L.geoJSON(data, {
+                    pointToLayer: function(feature, latlng) {
+                        return L.circleMarker(latlng, {
+                            radius: 4,  // Tamaño fijo para los puntos de las torres
+                            color: color,
+                            fillOpacity: 0.9
+                        });
+                    },
+                    onEachFeature: function(feature, layer) {
+                        var popupContent = '<div class="popup-custom"><h3>Torre</h3>';
+                        if (feature.properties) {
+                            for (var key in feature.properties) {
+                                popupContent += '<strong>' + key + ':</strong> ' + feature.properties[key] + '<br>';
+                            }
+                        }
+                        popupContent += '</div>';
+                        layer.bindPopup(popupContent);
+                    }
+                }).addTo(layerGroup);
+            })
+            .catch(error => console.error('Error al cargar torres GeoJSON:', error));
+    }
+    // Cargar coberturas 5G primero
+    loadGeoJson('https://raw.githubusercontent.com/Desafio17SLUCClaroChile/SIG_FINAL/main/geoJSON/ENTEL_26_GHZ_COBERTURA_T_5G.geojson', entel5GGroup);
+    loadGeoJson('https://raw.githubusercontent.com/Desafio17SLUCClaroChile/SIG_FINAL/main/geoJSON/ENTEL_3500_MHZ_COBERTURA_T_5G.geojson', entel5GGroup);
+    loadGeoJson('https://raw.githubusercontent.com/Desafio17SLUCClaroChile/SIG_FINAL/main/geoJSON/TELEFONICA_3500_MHZ_COBERTURA_T_5G.geojson', movistar5GGroup);
+    loadGeoJson('https://raw.githubusercontent.com/Desafio17SLUCClaroChile/SIG_FINAL/main/geoJSON/WOM_3500_MHZ_COBERTURA.json', wom5GGroup);
+    loadGeoJson('https://raw.githubusercontent.com/Desafio17SLUCClaroChile/SIG_FINAL/main/geoJSON/WOM_AWS_COBERTURA_T_5G.geojson', womAWSGroup);
+    
+    // Cargar torres 5G después
+    loadTowerGeoJson('https://raw.githubusercontent.com/Desafio17SLUCClaroChile/SIG_FINAL/main/geoJSON/ENTEL_26_GHZ_TORRES_TARAPACA.json', entel5GGroup, 'orange');
+    loadTowerGeoJson('https://raw.githubusercontent.com/Desafio17SLUCClaroChile/SIG_FINAL/main/geoJSON/ENTEL_3500_MHZ_TORRES_TARAPACA.json', entel5GGroup, 'orange');
+    loadTowerGeoJson('https://raw.githubusercontent.com/Desafio17SLUCClaroChile/SIG_FINAL/main/geoJSON/TELEFONICA_3500_MHZ_TORRES_TARAPACA.json', movistar5GGroup, 'blue');
+    loadTowerGeoJson('https://raw.githubusercontent.com/Desafio17SLUCClaroChile/SIG_FINAL/main/geoJSON/WOM_3500_MHZ_TORRES_TARAPACA.json', wom5GGroup, 'purple');
+    loadTowerGeoJson('https://raw.githubusercontent.com/Desafio17SLUCClaroChile/SIG_FINAL/main/geoJSON/WOM_AWS_TORRES_TARAPACA.json', womAWSGroup, 'purple');
+    
+    // Cargar coberturas 4G
+    loadGeoJson('https://raw.githubusercontent.com/Desafio17SLUCClaroChile/SIG_FINAL/main/TARAPAC%C3%81_4G/CLARO_2600_MHZ_COBERTURA_TARAPACÁ.json', claro4GGroup);
+    loadGeoJson('https://raw.githubusercontent.com/Desafio17SLUCClaroChile/SIG_FINAL/main/TARAPAC%C3%81_4G/CLARO_700_MHZ_COBERTURA_TARAPACÁ.json', claro4GGroup);
+    loadGeoJson('https://raw.githubusercontent.com/Desafio17SLUCClaroChile/SIG_FINAL/main/TARAPAC%C3%81_4G/ENTEL_2600_MHZ_COBERTURA_TARAPACÁ.json', entel4GGroup);
+    loadGeoJson('https://raw.githubusercontent.com/Desafio17SLUCClaroChile/SIG_FINAL/main/TARAPAC%C3%81_4G/ENTEL_700_MHZ_COBERTURA_TARAPACÁ.json', entel4GGroup);
+    loadGeoJson('https://raw.githubusercontent.com/Desafio17SLUCClaroChile/SIG_FINAL/main/TARAPAC%C3%81_4G/MOVISTAR_2600_MHZ_COBERTURA_TARAPACÁ.json', movistar4GGroup);
+    loadGeoJson('https://raw.githubusercontent.com/Desafio17SLUCClaroChile/SIG_FINAL/main/TARAPAC%C3%81_4G/MOVISTAR_700_MHZ_COBERTURA_TARAPACÁ.json', movistar4GGroup);
+    loadGeoJson('https://raw.githubusercontent.com/Desafio17SLUCClaroChile/SIG_FINAL/main/TARAPAC%C3%81_4G/WOM_2100_MHZ_COBERTURA_TARAPACÁ.json', wom4GGroup);
+    
+    // Cargar torres 4G después
+    loadTowerGeoJson('https://raw.githubusercontent.com/Desafio17SLUCClaroChile/SIG_FINAL/main/TARAPAC%C3%81_4G/CLARO_2600_MHZ_TORRES_TARAPACÁ.json', claro4GGroup, 'red');
+    loadTowerGeoJson('https://raw.githubusercontent.com/Desafio17SLUCClaroChile/SIG_FINAL/main/TARAPAC%C3%81_4G/CLARO_700_MHZ_TORRES_TARAPACÁ.json', claro4GGroup, 'red');
+    loadTowerGeoJson('https://raw.githubusercontent.com/Desafio17SLUCClaroChile/SIG_FINAL/main/TARAPAC%C3%81_4G/ENTEL_2600_MHZ_TORRES_TARAPACÁ.json', entel4GGroup, 'orange');
+    loadTowerGeoJson('https://raw.githubusercontent.com/Desafio17SLUCClaroChile/SIG_FINAL/main/TARAPAC%C3%81_4G/ENTEL_700_MHZ_TORRES_TARAPACÁ.json', entel4GGroup, 'orange');
+    loadTowerGeoJson('https://raw.githubusercontent.com/Desafio17SLUCClaroChile/SIG_FINAL/main/TARAPAC%C3%81_4G/MOVISTAR_2600_MHZ_TORRES_TARAPACÁ.json', movistar4GGroup, 'blue');
+    loadTowerGeoJson('https://raw.githubusercontent.com/Desafio17SLUCClaroChile/SIG_FINAL/main/TARAPAC%C3%81_4G/MOVISTAR_700_MHZ_TORRES_TARAPACÁ.json', movistar4GGroup, 'blue');
+    loadTowerGeoJson('https://raw.githubusercontent.com/Desafio17SLUCClaroChile/SIG_FINAL/main/TARAPAC%C3%81_4G/WOM_2100_MHZ_TORRES_TARAPACÁ.json', wom4GGroup, 'purple');
+    
+    
+            var baseMaps = {
+                "OpenStreetMap": osmLayer,
+                "Google Satelital": googleSat
+            };
+    
+            var overlayMaps = {
+                "Claro 5G ": claro5GGroup,
+                "Entel 5G ": entel5GGroup,
+                "Movistar 5G ": movistar5GGroup,
+                "Wom 5G ": wom5GGroup,
+                "Wom AWS ": womAWSGroup,
+                "Claro 4G ": claro4GGroup,
+                "Entel 4G ": entel4GGroup,
+                "Movistar 4G ": movistar4GGroup,
+                "Wom 4G ": wom4GGroup
+            };
+    
+            L.control.layers(baseMaps, overlayMaps).addTo(map);
+        </script>
+
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Plataforma de Cobertura 5G en Chile</p>
+    </footer>
+</body>
+</html>
