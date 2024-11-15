@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa de Cobertura 5G en Chile</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>Mapa de Cobertura 5G en Chile</h1>
+        <nav>
+            <ul>
+                <li><a href="https://desafio17slucclarochile.github.io/plataformasig/">Mapa de Cobertura</a></li>
+                <li><a href="https://desafio17slucclarochile.github.io/plataformasig/">Análisis Demográfico</a></li>
+                <li><a href="https://desafio17slucclarochile.github.io/plataformasig/">Planificación de Radioenlaces</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section id="mapaCobertura">
+            <h2>Análisis demografico e instalaciones, sitios de interés</h2>
+            <p>Visualiza asentamientos urbanos, rurales, así como ifraestructuras críticas de uso publico tales como centros de salud, comisarias de carabineros,
+                cuarteles de bomberos, jardines infantiles y establecimientos de educación (colegios) .</p>
+        </section>
+        <title>Mapa de Tarapacá con GeoJSON</title>
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+        <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+        <style>
+            #map {
+                height: 100vh;
+                width: 100%;
+            }
+        </style>
+    </head>
+    <body>
+    
+    <div id="map"></div>
+    
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+    
+    <script>
+        // Inicialización del mapa centrado en la región de Tarapacá, Chile
+        var map = L.map('map', {
+            center: [-20.2133, -70.1483], // Coordenadas de Tarapacá
+            zoom: 10
+        });
+    
+        // Capas base de OpenStreetMap y Google Hybrid
+        var osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        });
+    
+        var googleHybrid = L.tileLayer('http://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}', {
+            maxZoom: 20,
+            subdomains: ['mt0', 'mt1', 'mt2', 'mt3']
+        });
+    
+        // Añadir OSM como base inicial
+        osmLayer.addTo(map);
+    
+        // Añadir el geocodificador para buscar direcciones y coordenadas
+        var geocoder = L.Control.geocoder({
+            defaultMarkGeocode: true
+        })
+        .on('markgeocode', function(e) {
+            var latlng = e.geocode.center;
+            var locationName = e.geocode.name;
+            
+            // Crear un marcador en la ubicación seleccionada con popup de información
+            var marker = L.marker(latlng).addTo(map)
+                .bindPopup(`<strong>Ubicación:</strong> ${locationName}<br><strong>Coordenadas:</strong> ${latlng.lat.toFixed(6)}, ${latlng.lng.toFixed(6)}`)
+                .openPopup();
+            
+            map.setView(latlng, 15); // Acercar el mapa al marcador
+        })
+        .addTo(map);
+    
+        // ---- Aquí debes añadir tus capas geojson ----
+        var geojsonLayers = {}; // Objeto para almacenar las capas GeoJSON
+    
+        function loadGeoJSONLayer(url, layerName, addToMap = false) {
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                var layer = L.geoJSON(data, {
+                    style: function(feature) {
+                        switch (layerName) {
+                            case 'COMUNIDAD_INDIGENA_TARAPACÁ':
+                                return { color: 'gray', fillColor: 'yellow', fillOpacity: 1 };
+                            case 'ALDEA_TARAPACÁ':
+                                return { color: 'gray', fillColor: 'green', fillOpacity: 1 };
+                            case 'CIUDADES_TARAPACÁ':
+                                return { color: 'gray', fillColor: 'blue', fillOpacity: 1 };
+                          
+                                case 'Zonas_de_interés_Tarapacá_final':
+        switch (feature.properties['Categoria']) {
+            case 'Zonas de interés atractivo':
+                return { color: 'none', fillColor: '#984EA3', fillOpacity: 0.6 };
+            case 'Zonas de interés en desarrollo':
+                return { color: 'none', fillColor: '#4DAF4A', fillOpacity: 0.6 };
+            case 'Zonas de interés inicial':
+                return { color: 'none', fillColor: '#377EB8', fillOpacity: 0.6 };
+            case 'Zonas en interés potencial':
+                return { color: 'none', fillColor: '#E41A1C', fillOpacity: 0.6 };
+            default:
+                return { color: 'none', fillColor: '#828282', fillOpacity: 0.6 };
+        }
+        break;
+    
+    
+                                break;
+    
+                            case 'CASERIO_TARAPACÁ':
+                                return { color: 'black', fillColor: 'pink', fillOpacity: 1 };
+                            case 'NIVEL_SOCIOECONÓMICO_TARAPACÁ':
+                            switch (feature.properties['Nivel socioeconomico']) {
+                                    case 'ALTO':
+                                        return { color: 'none', fillColor: '#00FF00', fillOpacity: 0.6 };
+                                    case 'MEDIO ALTO':
+                                        return { color: 'none', fillColor: '#00FF00', fillOpacity: 0.6 };
+                                    case 'MEDIO':
+                                        return { color: 'none', fillColor: '#FFFF00', fillOpacity: 0.6 };
+                                    case 'MEDIO BAJO':
+                                        return { color: 'none', fillColor: '#FF8000', fillOpacity: 0.6 };
+                                    case 'BAJO':
+                                        return { color: 'none', fillColor: '#FF0000', fillOpacity: 0.6 };
+                                    case 'Indeterminado':
+                                        return { color: 'none', fillColor: '#828282', fillOpacity: 0.6 };
+                                    default:
+                                        return { color: 'none', fillColor: '#828282', fillOpacity: 0.6 };
+                                }
+                                break;
+    
+                                case 'NIVEL_ESCOLARIDAD_TARAPACA':
+        const val = parseInt(feature.properties['VAL']);
+        console.log('VAL:', val);  // Asegura que VAL se muestra en la consola
+    
+        // Define un arreglo de colores en el orden deseado
+        const colors = ['#FFFF00', '#FF0000', '#00FF00', '#80FF00'];
+    
+        if (!isNaN(val) && val >= 1 && val <= 4) {
+            // Usa `val - 1` para obtener el índice correcto en el arreglo
+            return { color: 'none', fillColor: colors[val - 1], fillOpacity: 0.6 };
+        } else {
+            console.log('VAL no es un número o es un valor desconocido:', feature.properties['VAL']);
+            return { color: 'none', fillColor: '#828282', fillOpacity: 0.6 };
+        }
+        break;
+    
+    
+    
+    
+                            case 'Zonas_de_interés_Tarapacá_final':
+                                switch (feature.properties['Categoria']) {
+                                    case 'Zonas de interés atractivo':
+                                        return { color: 'none', fillColor: '#984EA3', fillOpacity: 0.6 };
+                                    case 'Zonas de interés en desarrollo':
+                                        return { color: 'none', fillColor: '#4DAF4A', fillOpacity: 0.6 };
+                                    case 'Zonas de interés inicial':
+                                        return { color: 'none', fillColor: '#377EB8', fillOpacity: 0.6 };
+                                    case 'Zonas en interés potencial':
+                                        return { color: 'none', fillColor: '#E41A1C', fillOpacity: 0.6 };
+                                    default:
+                                        return { color: 'none', fillColor: '#828282', fillOpacity: 0.6 };
+                                }
+                                break;
+                        }
+                    },
+                    onEachFeature: function (feature, layer) {
+                        if (feature.properties) {
+                            var popupContent = "<strong>Propiedades:</strong><br>";
+                            for (var prop in feature.properties) {
+                                popupContent += `<strong>${prop}:</strong> ${feature.properties[prop]}<br>`;
+                            }
+                            layer.bindPopup(popupContent);
+                        }
+                    }
+                });
+                geojsonLayers[layerName] = layer;
+                if (addToMap) {
+                    layer.addTo(map);
+                }
+                updateLayerControl();
+            })
+            .catch(error => console.log("Error al cargar el GeoJSON:", error));
+    }
+    
+    
+        // Función para actualizar el control de capas
+        var layerControl = null; // Variable para almacenar el control de capas
+    
+        function updateLayerControl() {
+            var overlayMaps = {};
+            for (var layerName in geojsonLayers) {
+                overlayMaps[layerName] = geojsonLayers[layerName];
+            }
+    
+            var baseMaps = {
+                "OpenStreetMap": osmLayer,
+                "Google Hybrid": googleHybrid
+            };
+    
+            // Si el control de capas ya existe, elimínalo
+            if (layerControl) {
+                layerControl.remove();
+            }
+    
+            // Crear el control de capas con las capas base y superpuestas
+            layerControl = L.control.layers(baseMaps, overlayMaps).addTo(map);
+        }
+    
+        // ---- Añadir las capas GeoJSON ----
+        loadGeoJSONLayer('https://raw.githubusercontent.com/Desafio17SLUCClaroChile/SIG_FINAL/main/Zonas%20de%20potencial%20demogr%C3%A1fico/ALDEA_TARAPAC%C3%81.geojson', 'ALDEA_TARAPACÁ', true);
+        loadGeoJSONLayer('https://raw.githubusercontent.com/Desafio17SLUCClaroChile/SIG_FINAL/main/Zonas%20de%20potencial%20demogr%C3%A1fico/CASERIO_TARAPACÁ.geojson', 'CASERIO_TARAPACÁ');
+        loadGeoJSONLayer('https://raw.githubusercontent.com/Desafio17SLUCClaroChile/SIG_FINAL/main/Zonas%20de%20potencial%20demogr%C3%A1fico/CIUDADES_TARAPACÁ.geojson', 'CIUDADES_TARAPACÁ');
+        loadGeoJSONLayer('https://raw.githubusercontent.com/Desafio17SLUCClaroChile/SIG_FINAL/main/Zonas%20de%20potencial%20demogr%C3%A1fico/COMPAÑIAS_DE_BOMBEROS_TARAPACÁ.geojson', 'COMPAÑIAS_DE_BOMBEROS_TARAPACÁ');
+        loadGeoJSONLayer('https://raw.githubusercontent.com/Desafio17SLUCClaroChile/SIG_FINAL/main/Zonas%20de%20potencial%20demogr%C3%A1fico/COMUNIDAD_INDIGENA.geojson', 'COMUNIDAD_INDIGENA_TARAPACÁ');
+        loadGeoJSONLayer('https://raw.githubusercontent.com/Desafio17SLUCClaroChile/SIG_FINAL/main/Zonas%20de%20potencial%20demogr%C3%A1fico/CUARTELES_DE_CARABINEROS_TARAPACÁ.geojson', 'CUARTELES_DE_CARABINEROS_TARAPACÁ');
+        loadGeoJSONLayer('https://raw.githubusercontent.com/Desafio17SLUCClaroChile/SIG_FINAL/main/Zonas%20de%20potencial%20demogr%C3%A1fico/CUERPOS_DE_BOMBEROS_TARAPACÁ.geojson', 'CUERPOS_DE_BOMBEROS_TARAPACÁ');
+        loadGeoJSONLayer('https://raw.githubusercontent.com/Desafio17SLUCClaroChile/SIG_FINAL/main/Zonas%20de%20potencial%20demogr%C3%A1fico/ESTABLECIMIENTOS_DE_EDUCACIÓN_ESCOLAR_TARAPACÁ.geojson', 'ESTABLECIMIENTOS_DE_EDUCACIÓN_ESCOLAR_TARAPACÁ');
+        loadGeoJSONLayer('https://raw.githubusercontent.com/Desafio17SLUCClaroChile/SIG_FINAL/main/Zonas%20de%20potencial%20demogr%C3%A1fico/ESTABLECIMIENTOS_DE_SALUD_TARAPACÁ.geojson', 'ESTABLECIMIENTOS_DE_SALUD_TARAPACÁ');
+        loadGeoJSONLayer('https://raw.githubusercontent.com/Desafio17SLUCClaroChile/SIG_FINAL/main/Zonas%20de%20potencial%20demogr%C3%A1fico/ESTABLECIMIENTOS_EDUCACIONALES_TARAPACÁ.json', 'ESTABLECIMIENTOS_EDUCACIONALES_MINEDUC');
+        loadGeoJSONLayer('https://raw.githubusercontent.com/Desafio17SLUCClaroChile/SIG_FINAL/main/Zonas%20de%20potencial%20demogr%C3%A1fico/JARDINES_INFANTILES_TARAPACÁ.geojson', 'JARDINES_INFANTILES_TARAPACÁ');
+        loadGeoJSONLayer('https://raw.githubusercontent.com/Desafio17SLUCClaroChile/SIG_FINAL/main/Zonas%20de%20potencial%20demogr%C3%A1fico/NIVEL_SOCIOECONÓMICO_TARAPACÁ.geojson', 'NIVEL_SOCIOECONÓMICO_TARAPACÁ');
+        loadGeoJSONLayer('https://raw.githubusercontent.com/Desafio17SLUCClaroChile/SIG_FINAL/main/Zonas%20de%20potencial%20demogr%C3%A1fico/PUEBLOS_TARAPACÁ.geojson', 'PUEBLOS_TARAPACÁ');
+        loadGeoJSONLayer('https://raw.githubusercontent.com/Desafio17SLUCClaroChile/SIG_FINAL/main/Zonas%20de%20potencial%20demogr%C3%A1fico/Zonas_de_interés_Tarapacá_final.geojson', 'Zonas_de_interés_Tarapacá_final');
+        loadGeoJSONLayer('https://raw.githubusercontent.com/Desafio17SLUCClaroChile/SIG_FINAL/main/Zonas%20de%20potencial%20demogr%C3%A1fico/NIVEL_ESCOLARIDAD_TARAPACA.geojson', 'NIVEL_ESCOLARIDAD_TARAPACA');
+    
+    
+        map.on('dblclick', function(e) {
+        var latlng = e.latlng; // Obtener coordenadas del doble clic
+        var marker = L.marker(latlng).addTo(map)
+            .bindPopup(`<strong>Coordenadas del punto:</strong><br>${latlng.lat.toFixed(6)}, ${latlng.lng.toFixed(6)}`)
+            .openPopup();
+    });
+    
+    
+    
+    </script>
+    
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Plataforma de Cobertura 5G en Chile</p>
+    </footer>
+</body>
+</html>
