@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa de Cobertura 5G en Chile</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>Mapa de Cobertura 5G en Chile</h1>
+        <nav>
+            <ul>
+                <li><a href="https://desafio17slucclarochile.github.io/plataformasig/">Mapa de Cobertura</a></li>
+                <li><a href="https://desafio17slucclarochile.github.io/plataformasig/">Análisis Demográfico</a></li>
+                <li><a href="https://desafio17slucclarochile.github.io/plataformasig/">Planificación de Radioenlaces</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section id="analisis-economico">
+            <h2>Mapa de análisis económico</h2>
+            <p>Visualiza localización de instalaciones mineras, asentamientos pesqueros, así como plantas de energía solar.</p>
+            <a class="button" href="https://desafio17slucclarochile.github.io/plataformasig/Maqueta_secundaria_an%C3%A1lisis_econ%C3%B3mico.html" target="_blank">Ir al mapa</a>
+        </section>
+       
+        <section id="analisis-demografico">
+            <h2>Mapa de análisis demográfico</h2>
+            <p>Visualiza asentamientos urbanos, rurales, así como zonas de interés según actividad productiva.</p>
+            <a class="button" href="https://desafio17slucclarochile.github.io/plataformasig/Maqueta_secundaria_an%C3%A1lisis_demogr%C3%A1fico.html" target="_blank">Ir al mapa</a>
+        </section>
+    </main>
+    
+    <script>
+        function openMap(url) {
+            window.open(url, '_blank');
+        }
+    </script>
+    
+
+    <footer>
+        <p>&copy; 2024 Plataforma de Cobertura 5G en Chile</p>
+    </footer>
+
+    <script>
+        function openMap(inputId) {
+            const link = document.getElementById(inputId).value;
+            if (link) {
+                window.open(link, "_self"); // Abre el enlace en la misma ventana
+            } else {
+                alert("Por favor, ingresa un enlace válido.");
+            }
+        }
+    </script>
+</body>
+</html>
