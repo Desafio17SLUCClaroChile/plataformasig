@@ -25,6 +25,7 @@
         </section>
         <title>Mapa de Cobertura 4G y 5G en Tarapacá</title>
         <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+        <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
         <style>
             #map {
                 height: 600px;
@@ -37,12 +38,23 @@
                 padding: 8px;
                 box-sizing: border-box;
             }
+            #search-container {
+                position: absolute;
+                top: 10px;
+                left: 10px;
+                z-index: 400;
+                background: white;
+                padding: 10px;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+            }
         </style>
     </head>
     <body>
+        
         <div id="map"></div>
     
         <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+        <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
         <script>
             var map = L.map('map').setView([-20.0, -69.5], 6);
     
@@ -56,6 +68,8 @@
                 subdomains: ['mt0', 'mt1', 'mt2', 'mt3']
             });
     
+          
+
             // Grupos para cada operador y tecnología
             var claro5GGroup = L.layerGroup(), entel5GGroup = L.layerGroup(), movistar5GGroup = L.layerGroup(), wom5GGroup = L.layerGroup(), womAWSGroup = L.layerGroup();
             var claro4GGroup = L.layerGroup(), entel4GGroup = L.layerGroup(), movistar4GGroup = L.layerGroup(), wom4GGroup = L.layerGroup();
@@ -164,6 +178,24 @@
             };
     
             L.control.layers(baseMaps, overlayMaps).addTo(map);
+
+              // Añadir el geocodificador para buscar direcciones y coordenadas
+    var geocoder = L.Control.geocoder({
+        defaultMarkGeocode: true
+    })
+    .on('markgeocode', function(e) {
+        var latlng = e.geocode.center;
+        var locationName = e.geocode.name;
+        
+        // Crear un marcador en la ubicación seleccionada con popup de información
+        var marker = L.marker(latlng).addTo(map)
+            .bindPopup(`<strong>Ubicación:</strong> ${locationName}<br><strong>Coordenadas:</strong> ${latlng.lat.toFixed(6)}, ${latlng.lng.toFixed(6)}`)
+            .openPopup();
+        
+        map.setView(latlng, 15); // Acercar el mapa al marcador
+    })
+    .addTo(map);
+
         </script>
 
     </main>
