@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa de Cobertura 5G en Chile</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>Mapa de Cobertura 5G en Chile</h1>
+        <nav>
+            <ul>
+                <li><a href="https://desafio17slucclarochile.github.io/plataformasig/">Mapa de Cobertura</a></li>
+                <li><a href="https://desafio17slucclarochile.github.io/plataformasig/">Análisis Demográfico</a></li>
+                <li><a href="https://desafio17slucclarochile.github.io/plataformasig/">Planificación de Radioenlaces</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section id="mapaCobertura">
+            <h2>Actividades productivas</h2>
+            <p>Asentamientos mineros, pesqueros y plantas de energía solar en Tarapacá.</p>
+        </section>
+       
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Mapa de Tarapacá con GeoJSON</title>
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+        <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+        <style>
+            #map {
+                height: 100vh;
+                width: 100%;
+            }
+        </style>
+    </head>
+    <body>
+    
+    <div id="map"></div>
+    
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+    
+    <script>
+        
+        var map = L.map('map', {
+            center: [-20.2133, -70.1483], 
+            zoom: 10
+        });
+    
+        var osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        });
+    
+        var googleHybrid = L.tileLayer('http://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}', {
+            maxZoom: 20,
+            subdomains: ['mt0', 'mt1', 'mt2', 'mt3']
+        });
+    
+       
+        osmLayer.addTo(map);
+    
+        
+        var geocoder = L.Control.geocoder({
+            defaultMarkGeocode: true
+        })
+        .on('markgeocode', function(e) {
+            var latlng = e.geocode.center;
+            var locationName = e.geocode.name;
+            
+            
+            var marker = L.marker(latlng).addTo(map)
+                .bindPopup(`<strong>Ubicación:</strong> ${locationName}<br><strong>Coordenadas:</strong> ${latlng.lat.toFixed(6)}, ${latlng.lng.toFixed(6)}`)
+                .openPopup();
+            
+            map.setView(latlng, 15); 
+        })
+        .addTo(map);
+    
+        // ---- Aquí debes añadir tus capas geojson ----
+        var geojsonLayers = {}; 
+    
+        function loadGeoJSONLayer(url, layerName, color, addToMap = false) {
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    var layer = L.geoJSON(data, {
+                        style: function() {
+                            return {
+                                color: color,
+                                fillColor: color,
+                                fillOpacity: 0.6,
+                                weight: 0 
+                            };
+                        },
+                        onEachFeature: function (feature, layer) {
+                            if (feature.properties) {
+                                var popupContent = "<strong>Propiedades:</strong><br>";
+                                for (var prop in feature.properties) {
+                                    popupContent += `<strong>${prop}:</strong> ${feature.properties[prop]}<br>`;
+                                }
+                                layer.bindPopup(popupContent);
+                            }
+                        }
+                    });
+                    geojsonLayers[layerName] = layer; 
+                    
+                    
+                    if (addToMap) {
+                        layer.addTo(map);
+                    }
+    
+                    updateLayerControl(); 
+                })
+                .catch(error => console.log("Error al cargar el GeoJSON:", error));
+        }
+    
+        
+        var layerControl = null; 
+    
+        function updateLayerControl() {
+            var overlayMaps = {};
+            for (var layerName in geojsonLayers) {
+                overlayMaps[layerName] = geojsonLayers[layerName];
+            }
+    
+            var baseMaps = {
+                "OpenStreetMap": osmLayer,
+                "Google Hybrid": googleHybrid
+            };
+    
+            
+            if (layerControl) {
+                layerControl.remove();
+            }
+    
+            
+            layerControl = L.control.layers(baseMaps, overlayMaps).addTo(map);
+        }
+    
+        
+        loadGeoJSONLayer('https://raw.githubusercontent.com/Desafio17SLUCClaroChile/SIG_FINAL/main/Actividades/ASENTAMIENTOS_MINEROS_TARAPACÁ.geojson', 'ASENTAMIENTOS_MINEROS_TARAPACÁ', 'orange', true);
+        loadGeoJSONLayer('https://raw.githubusercontent.com/Desafio17SLUCClaroChile/SIG_FINAL/main/Actividades/ASENTAMIENTOS_PESQUEROS_TARAPACÁ.geojson', 'ASENTAMIENTOS_PESQUEROS_TARAPACÁ', 'blue');
+        loadGeoJSONLayer('https://raw.githubusercontent.com/Desafio17SLUCClaroChile/SIG_FINAL/main/Actividades/CENTRALES_SOLARES_TARAPACÁ.geojson', 'CENTRALES_SOLARES_TARAPACÁ', 'green');
+    
+        map.on('dblclick', function(e) {
+            var latlng = e.latlng; 
+            var marker = L.marker(latlng).addTo(map)
+                .bindPopup(`<strong>Coordenadas del punto:</strong><br>${latlng.lat.toFixed(6)}, ${latlng.lng.toFixed(6)}`)
+                .openPopup();
+        });
+    
+    </script>
+        
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Plataforma de Cobertura 5G en Chile</p>
+    </footer>
+</body>
+</html>
